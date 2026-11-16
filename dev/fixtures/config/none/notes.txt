@@ -1,0 +1,1 @@
+A project without a configuration of the tool.

@@ -1,0 +1,234 @@
+{
+  "nodes": {
+    "atom-nix": {
+      "inputs": {
+        "git-hooks": [
+          "git-hooks"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794760271,
+        "narHash": "sha256-2MEE5UeVYo/nBBRb4k40Jm22F6RMEOMM1sfEyuTe0n0=",
+        "ref": "v0",
+        "rev": "d8e5b1d8f367d27181fbf6e2616c9e6c5ecbbafa",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-nix"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "d8e5b1d8f367d27181fbf6e2616c9e6c5ecbbafa",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-nix"
+      }
+    },
+    "atom-shell": {
+      "inputs": {
+        "git-hooks": [
+          "git-hooks"
+        ],
+        "treefmt-nix": [
+          "treefmt-nix"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794760499,
+        "narHash": "sha256-/bO49KAeVKd92ctpzTyKXvBjM5/+65dISrjYcE1ce8c=",
+        "ref": "v0",
+        "rev": "c6191ba89fd4b4be340cbddfc3fdbeb7f82d3cc5",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-shell"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "c6191ba89fd4b4be340cbddfc3fdbeb7f82d3cc5",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-shell"
+      }
+    },
+    "atom-workflows": {
+      "inputs": {
+        "git-hooks": [
+          "git-hooks"
+        ]
+      },
+      "locked": {
+        "lastModified": 1794585184,
+        "narHash": "sha256-kU+0Y2YKCu1dstioCPpYJekvSEzXlfTMDMoXDGFs3Ro=",
+        "ref": "v0",
+        "rev": "82957679afb098f2c36fbcc1ccdf5d52f3286ba4",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-workflows"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "82957679afb098f2c36fbcc1ccdf5d52f3286ba4",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-workflows"
+      }
+    },
+    "atom-workspace": {
+      "locked": {
+        "lastModified": 1794654303,
+        "narHash": "sha256-xhxguK3d06jf2KWB2pdmGmPOv2BByXR2OodSTDv+ps0=",
+        "ref": "v0",
+        "rev": "53d4d101ec71025dbb19da3d423455e72e10198a",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-workspace"
+      },
+      "original": {
+        "ref": "v0",
+        "rev": "53d4d101ec71025dbb19da3d423455e72e10198a",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/flakeyard/atom-workspace"
+      }
+    },
+    "flake-compat": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1767039857,
+        "narHash": "sha256-vNpUSpF5Nuw8xvDLj2KCwwksIbjua2LZCqhV1LNRDns=",
+        "owner": "NixOS",
+        "repo": "flake-compat",
+        "rev": "5edf11c44bc78a0d334f6334cdaf7d60d732daab",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "repo": "flake-compat",
+        "type": "github"
+      }
+    },
+    "flake-parts": {
+      "inputs": {
+        "nixpkgs-lib": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793576659,
+        "narHash": "sha256-V1h85lUaJBQoHFrB2vpXZOE0Ju1MYSnIpsehoVZYlDo=",
+        "ref": "main",
+        "rev": "ea2630b7470978622c7689a1ff75d2b389175399",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/hercules-ci/flake-parts"
+      },
+      "original": {
+        "ref": "main",
+        "rev": "ea2630b7470978622c7689a1ff75d2b389175399",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/hercules-ci/flake-parts"
+      }
+    },
+    "git-hooks": {
+      "inputs": {
+        "flake-compat": "flake-compat",
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1793686154,
+        "narHash": "sha256-Zb/0L3soxrkfcrywpfp0J++0WFLB3tzh0Xtx9up+VNc=",
+        "ref": "master",
+        "rev": "204b6977e00caac19e2313015a598543ca7be150",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/cachix/git-hooks.nix"
+      },
+      "original": {
+        "ref": "master",
+        "rev": "204b6977e00caac19e2313015a598543ca7be150",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/cachix/git-hooks.nix"
+      }
+    },
+    "import-tree": {
+      "locked": {
+        "lastModified": 1788467110,
+        "narHash": "sha256-ljEMTXP/rH0tOvDzc9gzwww6KcHRPRnEHzd9lK48V7s=",
+        "ref": "main",
+        "rev": "eb1b52eaecc57f7c136d07ae8a93e724dfecac46",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/vic/import-tree"
+      },
+      "original": {
+        "ref": "main",
+        "rev": "eb1b52eaecc57f7c136d07ae8a93e724dfecac46",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/vic/import-tree"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1794165970,
+        "narHash": "sha256-XuAV2cUwaod3Bt4XFVqiXz3v1w2ex16W6Sv4S7EWres=",
+        "ref": "nixos-26.05",
+        "rev": "ac588ef1c914865dad517b337ea0eb9694a4021c",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/NixOS/nixpkgs"
+      },
+      "original": {
+        "ref": "nixos-26.05",
+        "rev": "ac588ef1c914865dad517b337ea0eb9694a4021c",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/NixOS/nixpkgs"
+      }
+    },
+    "root": {
+      "inputs": {
+        "atom-nix": "atom-nix",
+        "atom-shell": "atom-shell",
+        "atom-workflows": "atom-workflows",
+        "atom-workspace": "atom-workspace",
+        "flake-parts": "flake-parts",
+        "git-hooks": "git-hooks",
+        "import-tree": "import-tree",
+        "nixpkgs": "nixpkgs",
+        "treefmt-nix": "treefmt-nix"
+      }
+    },
+    "treefmt-nix": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1791885023,
+        "narHash": "sha256-C3alQ2MEt0zVrUSho5NUDo3jmhbff72++bfwoqT9Omo=",
+        "ref": "main",
+        "rev": "0d6d739a833ba9a9c93034862e4a7b061a062a1c",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/numtide/treefmt-nix"
+      },
+      "original": {
+        "ref": "main",
+        "rev": "0d6d739a833ba9a9c93034862e4a7b061a062a1c",
+        "shallow": true,
+        "type": "git",
+        "url": "https://github.com/numtide/treefmt-nix"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
