@@ -1,0 +1,6 @@
+{
+  "overrides": [
+    { "files": "docs/**/*.md", "options": { "printWidth": 100 } },
+    { "files": "*.md", "excludeFiles": "notes/*.md", "options": {} }
+  ]
+}

@@ -1,0 +1,5 @@
+[[overrides]]
+files = ["docs/*.md"]
+
+[overrides.options]
+printWidth = 100
