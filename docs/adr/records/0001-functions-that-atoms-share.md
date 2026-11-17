@@ -1,0 +1,256 @@
+---
+id: ADR-0001
+title: Functions that atoms share
+status: accepted
+date: 2026-11-16
+supersedes: []
+superseded_by: []
+related: []
+affects: ["flake.nix", "nix/**", "internal/testing/**", "dev/**", "README.md"]
+review_by:
+---
+
+## Context
+
+lib-atom is step 4 of [FY-0038][fy-0038]: the library that removes the copies of
+Nix code from the atoms ([FY-0035][fy-0035]). [FY-0040][fy-0040] decides that it
+is a flake without inputs whose output `lib` holds plain functions: the check of
+`follows` with the import of the upstream module behind it, the warning of the
+next major version, the choice of a configuration file ([FY-0037][fy-0037]) and
+`version`; and that the helpers of the atoms' tests live in `internal/testing/`,
+outside the public API. Atoms pin lib-atom in their own `flake.lock`, and their
+dev flakes take its revision from there.
+
+Reading atom-workflows, atom-nix, atom-shell and atom-workspace at their `main`
+and atom-markdown and atom-text at the top of their open stacks showed:
+
+- `nix/follows.nix` of atom-workflows, atom-nix, atom-shell, atom-markdown and
+  atom-text differ only in the name of the atom, and so does the helper
+  `upstream` in their `nix/default.nix`, which throws the message or returns the
+  module. atom-workspace has no inputs.
+- `nix/warning.nix` of the six atoms differ only in the name of the atom; the
+  file of atom-nix only looks different when the name is replaced as text, since
+  `nix` is also a word of the file. Every atom calls it twice, for its check and
+  its shell, with `lib` of the consumer's `pkgs` and `./next-major.nix`.
+- The choice of a configuration file has three implementations. atom-workflows
+  (`nix/hooks.nix`) takes the first project file of the standard paths that
+  exists, without an error for a second one, and names the store path after the
+  base name of the file. atom-markdown (`nix/config.nix`) fails on more than one
+  project file and on forms the atom cannot pass to the tool, such as JavaScript
+  configurations of prettier, and names the store path without a leading dot,
+  since prettier chooses the parser of `--config` by the extension of the file
+  name. atom-text (`nix/configs.nix`) fails on more than one configuration of
+  typos, on its tables in `pyproject.toml` and `Cargo.toml` and on `.ecrc`, and
+  joins all of them into one error that the file of either tool throws. The
+  messages of atom-markdown and atom-text differ.
+- `dev/nix/facts.nix` and `dev/fixtures/next-major.nix` are identical in the six
+  atoms. `dev/nix/fixture.nix` has four forms, which differ in the upstream
+  inputs the atom gets, in whether a fixture imports atom-workspace or switches
+  off `checks.pre-commit` itself, and, in atom-workspace, in a given source and
+  a list of modules. The tests of `follows`, of the warning and of the glue of
+  atom-workspace differ only in the name of the atom, its upstream inputs, the
+  output that is evaluated (`checks.<domain>` or `devShells.flakeyard-nix`) and
+  the formatters and tools of the atom.
+
+Running Nix 2.35.2 with the nixpkgs, flake-parts, treefmt-nix and git-hooks.nix
+that the dev flake locks showed:
+
+- A flake-parts module whose attributes come from a module argument, such as a
+  file `{ testing, ... }: testing.follows { ... }`, fails with infinite
+  recursion: the module system needs its attributes to find the arguments. The
+  same file evaluates as `{ testing, ... }: { perSystem = ...; }`.
+- `builtins.fetchTree` with the `locked` attributes of a node of `flake.lock`,
+  `git+https` with `shallow`, fetches the source in pure evaluation, so a dev
+  flake can take the revision of lib-atom from the root lock without an input.
+- `nix flake check` of a flake whose only output is `lib` passes without a
+  warning about an unknown output.
+- `builtins.tryEval` catches `throw` but not its message, and a warning of
+  `lib.warn` cannot be read back. A test sees the message that an atom's module
+  makes only when the atom gets a `lib` whose function gives the message as a
+  value instead.
+- atom-shell and atom-markdown, rewritten locally against this design, without
+  their copies of `follows.nix`, `warning.nix`, `config.nix`, `facts.nix`,
+  `fixture.nix` and the next-major fixture and with their tests of `follows`, of
+  the warning and of atom-workspace as calls of the generators below, pass
+  `nix flake check` of their dev flakes on x86_64-linux and its evaluation on
+  every system. Their other tests changed only where they called the removed
+  files: the expected messages of atom-markdown about configuration files.
+
+## Decision
+
+### Flake
+
+The public `flake.nix` has no inputs and one output, `lib`; it defines the root
+of the repository and passes it to `nix/default.nix` ([FY-0039][fy-0039]). It
+has no `flake.lock`. Each function is a file of its own in `nix/`. The dev flake
+is in `dev/` ([FY-0038][fy-0038]).
+
+### Functions
+
+Every function takes `lib` of the consumer's nixpkgs where it needs one and the
+name of the atom, such as `atom-shell`, which every message starts with.
+
+- `version`: the version in `.release-please-manifest.json`, read with
+  `builtins.readFile` and `builtins.fromJSON`.
+- `follows { atom, own, consumer } name`: `null` when the consumer's inputs
+  `consumer` have no input `name` or one with the `outPath` of the atom's input
+  of that name in `own`, else the message of [FY-0017][fy-0017]:
+
+  ```text
+  atom-shell: input 'git-hooks' is locked twice; add to input atom-shell:
+    inputs.git-hooks.follows = "git-hooks";
+  ```
+
+- `upstream { atom, own, consumer } name module`: `module`, or a `throw` of the
+  message of `follows` with the same arguments. `own` is the atom's inputs and
+  `consumer` the module argument `inputs`.
+- `warning { lib, atom, root } value`: `value`, given with `lib.warn` while
+  `root + "/nix/next-major.nix"` exists, with the message of the atoms today:
+
+  ```text
+  atom-shell: version 1 is coming with breaking changes; support of this major
+  version ends 6 months after its first release. Migration guide:
+  https://github.com/flakeyard/atom-shell/blob/main/docs/migration/v1.md
+  ```
+
+  (one line; the version and the path of the guide come from the file).
+
+- `config { lib, atom, project } { tool, default, names, unsupported ? [ ] }`:
+  `{ file, errors }`. `project` is the project's source, `default` the path of
+  the atom's default and `names` the standard paths of the tool, relative to the
+  root of the project; each is looked for with `builtins.pathExists`.
+  `unsupported` lists the files that configure the tool in a form the atom
+  cannot pass to it: a path, or `{ name; label ? name; when ? path: true; }` for
+  a file that configures the tool only when `when` holds for its path, such as
+  `[tool.typos]` of `pyproject.toml`. `errors` holds, in this order:
+
+  ```text
+  atom-markdown: the atom cannot pass these configurations of prettier to it:
+  .prettierrc.cjs; write the configuration in one of .prettierrc,
+  .prettierrc.json instead.
+  atom-markdown: the project has more than one configuration of prettier:
+  .prettierrc.json, .prettierrc.yaml; keep one.
+  ```
+
+  (two lines, wrapped here), with `in <name>` instead of `in one of <names>` for
+  one standard path, and `label` for the files of `unsupported`. `file` throws
+  the errors, one per line, when there are any, and is otherwise the project's
+  file or the default, copied with `builtins.path` as a store path of its own
+  named after its base name without a leading dot.
+
+Checks that only one tool needs stay in its atom and are written as entries of
+`unsupported`: the tables of typos in `pyproject.toml` and `Cargo.toml` as
+`when` predicates that read the file with `builtins.fromTOML`, and `.ecrc` as a
+path of editorconfig-checker. Each tool gets its own errors, which only its file
+throws.
+
+### Test helpers
+
+`internal/testing/default.nix` takes the inputs of the atom's dev flake, the
+root of the atom, its systems, a function `atom` from inputs that replace those
+of the dev flake to the atom's outputs, the modules that every fixture imports,
+such as that of atom-workspace or
+`{ perSystem.pre-commit.check.enable = false; }`, and `lib` of the same revision
+of lib-atom. It gives:
+
+- `facts pkgs name facts`: a check that fails and names every false fact;
+- `fixture { name, source, module, atomInputs }`: the flake of a project at
+  `source`, by default `dev/fixtures/<name>` of the atom, that imports the atom
+  with the inputs of the dev flake except those in `atomInputs`, the modules of
+  every fixture and `module`, with `debug = true`;
+- `follows { output, messages }`, `next-major { output, message }` and
+  `workspace spec`: the `perSystem` modules of `checks.test-follows`,
+  `checks.test-next-major` and `checks.test-workspace`, which an atom's test
+  file sets as `{ testing, ... }: { perSystem = testing.follows { ... }; }`.
+  `messages` and `message` are restated by the atom's test with the comment of
+  FY-0035. The generators compare them with the messages that the atom's own
+  module makes, as consumers import it, for the `output`, such as
+  `[ "checks" "shell" ]`: the fixture gives the atom a lib-atom whose `upstream`
+  returns the message of `follows` as `flake.lib-atom-follows.<name>` instead of
+  throwing it, and whose `warning` adds the message for the file of
+  `internal/testing/fixtures/next-major` and the root that the atom passes to
+  the output as `lib-atom-warning`. An atom that passes a wrong name, root or
+  inputs fails its test. `spec` is a function of `{ pkgs, flake, system }` to
+  the atom's formatters and tools, by name, and its own facts.
+
+An atom's dev flake reads `flake.lock` of the atom's root, fetches the locked
+node of `lib-atom` with `builtins.fetchTree`, imports `flake.nix` of that source
+for the atom and `internal/testing` of it for the tests. These few lines cannot
+come from the library they load and stay in each atom, as the loader of
+[FY-0035][fy-0035] does.
+
+### Tests
+
+`dev/flake.nix` checks every function with pass and failure cases, failures
+through the messages and through `builtins.tryEval`, and `version` against the
+manifest. It checks `internal/testing` on `dev/fixtures/atom`, an atom that
+takes lib-atom as atoms do, with every generator and `fixture`, and shows that
+each generated check fails, naming the false fact, for a false fact, for the
+atom under a wrong name, for the atom without the guard of `follows`, for a
+wrong expected message and for a formatter or tool the project does not get. It
+checks this repository with the released atom-workflows, atom-nix, atom-shell
+and atom-workspace. The check of FY-0040 that runs the released atoms with the
+working tree of lib-atom needs atoms that take lib-atom; it is added when the
+atoms move to it.
+
+## Constraints
+
+- The public flake MUST have no inputs and MUST have no output other than `lib`.
+- Every function MUST take what it needs as arguments. Functions MUST NOT import
+  anything from a consumer's inputs; `follows` and `upstream` MUST compare only
+  `outPath`.
+- The names, arguments and results of the functions of `lib`, and the text of
+  every message they make, are the public API ([FY-0024][fy-0024]). A change
+  that breaks any of them MUST NOT be released within a major version.
+- `config` MUST detect whether a file exists only with `builtins.pathExists` on
+  the given source and MUST give the chosen file as a store path of its own
+  whose name has no leading dot.
+- Checks that one atom needs MUST stay in that atom.
+- `internal/testing/` MUST NOT be part of the public API and MUST NOT be an
+  output of the flake.
+- Every function and helper MUST be checked by `dev/flake.nix` with pass and
+  failure cases.
+
+## Consequences
+
+- (+) One implementation of the follows check, the warning and the choice of
+  configuration files, and one of the atoms' common tests.
+- (+) The messages of the follows check and the warning stay as they are, so
+  atoms move without a change visible to projects.
+- (−) atom-workflows fails on two files of one tool, where it took the first,
+  and the messages of atom-markdown and atom-text about configuration files
+  change; all three are `0.y.z` ([FY-0040][fy-0040]).
+- (−) Every atom keeps a few lines that load lib-atom in its dev flake.
+- (−) A test of an atom sets `perSystem` to the generator's module instead of
+  being that module.
+- (±) The helpers of the tests change with any release; an atom takes them with
+  the revision it pins.
+
+## Alternatives considered
+
+- **Functions bound to one atom once, such as `lib.for "atom-shell"`.** Saves
+  the argument `atom` in each call, but adds a layer to the API.
+- **`default` as a name in `config/` of the atom's root.** Ties the library to
+  the layout of atoms; a path serves any layout.
+- **`warning` with the path of the file.** The path `nix/next-major.nix` is set
+  by FY-0038 and is written once in the library.
+- **Each atom's messages about configuration files.** Three formats for the same
+  errors.
+- **Test helpers as flake output.** FY-0040 keeps them out of the public API.
+- **Generators that give whole modules.** The module system recurses infinitely
+  when a module comes from a module argument.
+
+[fy-0017]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0017-atom-contract.md
+[fy-0024]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0024-versioning-and-support.md
+[fy-0035]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0035-extract-logic-that-has-two-users.md
+[fy-0037]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0037-atoms-ship-default-configs-that-projects-replace.md
+[fy-0038]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0038-roll-out-the-atoms.md
+[fy-0039]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0039-reach-repository-files-in-nix-from-one-root.md
+[fy-0040]:
+  https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0040-share-code-through-lib-repositories.md
