@@ -17,9 +17,10 @@ Nix code from the atoms ([FY-0035][fy-0035]). [FY-0040][fy-0040] decides that it
 is a flake without inputs whose output `lib` holds plain functions: the check of
 `follows` with the import of the upstream module behind it, the warning of the
 next major version, the choice of a configuration file ([FY-0037][fy-0037]) and
-`version`; and that the helpers of the atoms' tests live in `internal/testing/`,
-outside the public API. Atoms pin lib-atom in their own `flake.lock`, and their
-dev flakes take its revision from there.
+`version`, and that Nix code that two atoms need lives in it; and that the
+helpers of the atoms' tests live in `internal/testing/`, outside the public API.
+Atoms pin lib-atom in their own `flake.lock`, and their dev flakes take its
+revision from there.
 
 Reading atom-workflows, atom-nix, atom-shell and atom-workspace at their `main`
 and atom-markdown and atom-text at the top of their open stacks showed:
@@ -43,6 +44,16 @@ and atom-markdown and atom-text at the top of their open stacks showed:
   typos, on its tables in `pyproject.toml` and `Cargo.toml` and on `.ecrc`, and
   joins all of them into one error that the file of either tool throws. The
   messages of atom-markdown and atom-text differ.
+- `nix/files.nix` of atom-nix and atom-workflows, after their move to lib-atom
+  0.1.0, build the source of the domain's check the same way: the project's
+  files, listed from `self.outPath`, whose relative path the `files` pattern of
+  a hook of the domain matches as `.*(<files>).*`, copied with `builtins.path`
+  and a filter that keeps them and only the directories that hold them, under
+  the name of the domain. atom-nix passes its hooks and returns the store path;
+  atom-workflows names its two hooks inside the file and also returns `of`, the
+  files of one hook that end in `.yml` or `.yaml`, which its app
+  `workflows-online` passes to zizmor. atom-data-formats will need the same for
+  hooks with patterns such as `\.ya?ml$`, `\.jsonc?$` and `\.toml$`.
 - `dev/nix/facts.nix` and `dev/fixtures/next-major.nix` are identical in the six
   atoms. `dev/nix/fixture.nix` has four forms, which differ in the upstream
   inputs the atom gets, in whether a fixture imports atom-workspace or switches
@@ -64,6 +75,12 @@ that the dev flake locks showed:
   flake can take the revision of lib-atom from the root lock without an input.
 - `nix flake check` of a flake whose only output is `lib` passes without a
   warning about an unknown output.
+- `builtins.match` matches the whole string, so the pattern of a hook is wrapped
+  in `.*(` and `).*` to be searched as pre-commit does with `re.search`. An
+  empty pattern, the default of `files` in git-hooks.nix, matches every path.
+  `lib.filesystem.listFilesRecursive` lists the files of a source in pure
+  evaluation, and two sources that differ only in files outside the filter give
+  the same store path.
 - `builtins.tryEval` catches `throw` but not its message, and a warning of
   `lib.warn` cannot be read back. A test sees the message that an atom's module
   makes only when the atom gets a `lib` whose function gives the message as a
@@ -75,6 +92,12 @@ that the dev flake locks showed:
   `nix flake check` of their dev flakes on x86_64-linux and its evaluation on
   every system. Their other tests changed only where they called the removed
   files: the expected messages of atom-markdown about configuration files.
+- atom-nix and atom-workflows at `main`, rewritten locally without
+  `nix/files.nix` to call `domain` below, with a lock that points lib-atom at
+  this working tree, pass `nix flake check` of their dev flakes on x86_64-linux.
+  The checks of their fixture projects, `checks.workflows` of atom-workflows and
+  its app evaluate to the same derivations as before; only the checks of the
+  changed files of the atoms themselves differ.
 
 ## Decision
 
@@ -137,6 +160,22 @@ name of the atom, such as `atom-shell`, which every message starts with.
   the errors, one per line, when there are any, and is otherwise the project's
   file or the default, copied with `builtins.path` as a store path of its own
   named after its base name without a leading dot.
+
+- `domain { lib, project } { name, hooks }`: `{ src, files, of }`, the files of
+  a domain for its check ([FY-0017][fy-0017]). `files` lists the paths of
+  `project`, relative to its root, that the pattern `files` of one of `hooks`
+  matches when it is searched in the path, as `.*(<files>).*`; a hook without
+  `files` matches every path, as an empty pattern does in pre-commit. The paths
+  are listed from `project`, never from a store path made during evaluation,
+  which a store may not have. `src` is `project` copied with `builtins.path`
+  under `name`, such as the name of the domain's check, with only these files
+  and the directories that hold them, so that a change of other files keeps the
+  check cached. `of hook` lists the elements of `files` that the pattern of
+  `hook` matches, for an app that passes them to the hook's tool; a filter by
+  the hook's `types`, such as `.yml` and `.yaml` for the hooks of
+  atom-workflows, stays in the atom. The filter is coarse: pre-commit selects by
+  `files`, `types` and `excludes` in the check, and a domain with a hook that
+  sets `always_run` passes the whole source instead.
 
 Checks that only one tool needs stay in its atom and are written as entries of
 `unsupported`: the tables of typos in `pyproject.toml` and `Cargo.toml` as
@@ -205,6 +244,9 @@ atoms move to it.
 - `config` MUST detect whether a file exists only with `builtins.pathExists` on
   the given source and MUST give the chosen file as a store path of its own
   whose name has no leading dot.
+- `domain` MUST select files only by the `files` patterns of the given hooks, as
+  pre-commit searches them, MUST read the list of files from the given source
+  and MUST name its store path only after `name`.
 - Checks that one atom needs MUST stay in that atom.
 - `internal/testing/` MUST NOT be part of the public API and MUST NOT be an
   output of the flake.
@@ -213,8 +255,9 @@ atoms move to it.
 
 ## Consequences
 
-- (+) One implementation of the follows check, the warning and the choice of
-  configuration files, and one of the atoms' common tests.
+- (+) One implementation of the follows check, the warning, the choice of
+  configuration files and the files of a domain, and one of the atoms' common
+  tests.
 - (+) The messages of the follows check and the warning stay as they are, so
   atoms move without a change visible to projects.
 - (−) atom-workflows fails on two files of one tool, where it took the first,
@@ -236,6 +279,11 @@ atoms move to it.
   by FY-0038 and is written once in the library.
 - **Each atom's messages about configuration files.** Three formats for the same
   errors.
+- **`domain` that rejects a hook without `files`.** git-hooks.nix gives every
+  hook an empty pattern by default, which pre-commit applies to every file; the
+  function does the same, so the check and the hook select the same files.
+- **`domain` that filters by `types` for `of`.** Selection by `types` belongs to
+  pre-commit (FY-0017); the one app that needs it keeps the filter.
 - **Test helpers as flake output.** FY-0040 keeps them out of the public API.
 - **Generators that give whole modules.** The module system recurses infinitely
   when a module comes from a module argument.
