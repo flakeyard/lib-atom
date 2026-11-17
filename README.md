@@ -224,7 +224,19 @@ tests:
   `test-workspace-formatter`, `test-workspace-tool`: each generated check fails
   and names the false fact for a false fact, the atom under another name or
   without the guard of `follows`, a wrong expected message, or a formatter or
-  tool the project does not get.
+  tool the project does not get;
+- `test-released-atom-workflows`, `test-released-atom-workspace`,
+  `test-released-atom-nix`, `test-released-atom-shell`,
+  `test-released-atom-markdown`, `test-released-atom-text`,
+  `test-released-atom-data-formats`: every check of the dev flake of each
+  released atom, at the revision of the atom that `dev/flake.nix` locks and with
+  the inputs that the atom's `dev/flake.lock` locks, with the working tree of
+  lib-atom in place of the revision the atom pins ([FY-0040][fy-0040]), so that
+  a change that breaks an atom fails here. Each also fails when the atom no
+  longer pins lib-atom or its loader no longer fetches it with
+  `builtins.fetchTree`, which
+  [`dev/nix/tests/released.nix`](dev/nix/tests/released.nix) replaces. A newly
+  released atom is added there and as an input of `dev/flake.nix`.
 
 Run the same commands as CI:
 
@@ -245,10 +257,8 @@ locked revisions ([FY-0038][fy-0038]).
 [`release.yaml`](.github/workflows/release.yaml) releases the repository with
 [workflow-release][workflow-release].
 
-The check of the released atoms with the working tree of lib-atom
-([FY-0040][fy-0040]) comes once atoms take lib-atom. Before a pull request, also
-run prettier, markdownlint, typos and `reuse lint`; the atoms that will provide
-them are not released yet ([FY-0038][fy-0038]).
+Before a pull request, also run prettier, markdownlint, typos and `reuse lint`;
+the atoms that will provide them are not released yet ([FY-0038][fy-0038]).
 
 ## License
 
