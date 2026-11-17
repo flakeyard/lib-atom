@@ -8,4 +8,5 @@
   upstream = import ./upstream.nix;
   warning = import ./warning.nix;
   config = import ./config.nix;
+  domain = import ./domain.nix;
 }

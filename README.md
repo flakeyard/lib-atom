@@ -1,9 +1,9 @@
 # lib-atom
 
 Nix functions that flakeyard atoms share: the check of `follows`, the warning of
-the next major version and the choice of configuration files, with helpers for
-the tests of atoms ([FY-0040][fy-0040], [ADR-0001][adr-0001]). Projects do not
-use it directly.
+the next major version, the choice of configuration files and the files of a
+domain, with helpers for the tests of atoms ([FY-0040][fy-0040],
+[ADR-0001][adr-0001]). Projects do not use it directly.
 
 ## How atoms take it
 
@@ -117,8 +117,21 @@ The functions of `lib`, each in [`nix/`](nix):
   the project's file, or the default when the project has none, as a store path
   of its own named after the file without a leading dot.
 
-The functions detect files with `builtins.pathExists` on the given source, which
-for a git flake holds only tracked files.
+- `domain { lib, project } { name, hooks }`: the files of a domain
+  ([FY-0017][fy-0017]), as `{ src, files, of }`. `files` lists the paths of
+  `project`, relative to its root, that the `files` pattern of one of the
+  `hooks` matches as pre-commit searches it, anywhere in the path; a hook
+  without `files` matches every file, as in pre-commit. `src` holds these files
+  and only the directories that hold them, copied from `project` with
+  `builtins.path` as a store path named `name`, which a change of other files
+  keeps. `of hook` lists the elements of `files` that the pattern of `hook`
+  matches, such as the files an app passes to the hook's tool. The filter is
+  coarse: the check leaves the selection by `files`, `types` and `excludes` to
+  pre-commit, and a domain with a hook that sets `always_run` passes the whole
+  source instead.
+
+The functions read files only from the given source, with `builtins.pathExists`
+and `builtins.readDir`, which for a git flake holds only tracked files.
 
 ## Test helpers
 
@@ -169,9 +182,10 @@ tests:
 
 - `workflows`, `nix`, `shell`, `treefmt`: the checks of the atoms of this
   repository;
-- `test-lib-version`, `test-lib-follows`, `test-lib-warning`, `test-lib-config`:
-  the functions of `lib`, with their messages and failures, over the fixture
-  projects in [`dev/fixtures/config`](dev/fixtures/config);
+- `test-lib-version`, `test-lib-follows`, `test-lib-warning`, `test-lib-config`,
+  `test-lib-domain`: the functions of `lib`, with their messages and failures,
+  over the fixture projects in [`dev/fixtures/config`](dev/fixtures/config) and
+  [`dev/fixtures/domain`](dev/fixtures/domain);
 - `test-facts`, `test-fixture`, `test-follows`, `test-next-major`,
   `test-workspace`: the helpers of `internal/testing` on
   [`dev/fixtures/atom`](dev/fixtures/atom), an atom that takes lib-atom as atoms
