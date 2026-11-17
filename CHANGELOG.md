@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/flakeyard/lib-atom/compare/v0.2.0...v0.3.0) (2026-11-17)
+
+
+### Features
+
+* lib.prettier with the configuration files of prettier for config ([#11](https://github.com/flakeyard/lib-atom/issues/11)) ([17abd82](https://github.com/flakeyard/lib-atom/commit/17abd82bacb341b3691fb53da8fa1c66da88022f))
+
 ## [0.2.0](https://github.com/flakeyard/lib-atom/compare/v0.1.0...v0.2.0) (2026-11-17)
 
 
