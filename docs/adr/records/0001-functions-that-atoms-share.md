@@ -54,6 +54,14 @@ and atom-markdown and atom-text at the top of their open stacks showed:
   files of one hook that end in `.yml` or `.yaml`, which its app
   `workflows-online` passes to zizmor. atom-data-formats will need the same for
   hooks with patterns such as `\.ya?ml$`, `\.jsonc?$` and `\.toml$`.
+- atom-markdown (`nix/formatter.nix`) passes to `config` the six names of
+  prettier and, as `unsupported`, its JavaScript and TypeScript configurations,
+  `package.json` with the key `prettier`, read with `builtins.fromJSON`, and
+  `.prettierrc.json` and `.prettierrc.toml` whose `overrides` have a pattern
+  with a directory, read with `builtins.fromJSON` and `builtins.fromTOML`.
+  atom-data-formats formats YAML and JSON with prettier and needs the same,
+  since a project's configuration of prettier replaces the defaults of both
+  atoms ([FY-0017][fy-0017]).
 - `dev/nix/facts.nix` and `dev/fixtures/next-major.nix` are identical in the six
   atoms. `dev/nix/fixture.nix` has four forms, which differ in the upstream
   inputs the atom gets, in whether a fixture imports atom-workspace or switches
@@ -92,6 +100,11 @@ that the dev flake locks showed:
   `nix flake check` of their dev flakes on x86_64-linux and its evaluation on
   every system. Their other tests changed only where they called the removed
   files: the expected messages of atom-markdown about configuration files.
+- atom-markdown at `main` and atom-data-formats at the top of its first stack,
+  rewritten locally to take `prettier` below, with a lock that points lib-atom
+  at this working tree, pass `nix flake check` of their dev flakes on
+  x86_64-linux; atom-markdown's tests pass unchanged, so its messages about the
+  configuration files of prettier are the same.
 - atom-nix and atom-workflows at `main`, rewritten locally without
   `nix/files.nix` to call `domain` below, with a lock that points lib-atom at
   this working tree, pass `nix flake check` of their dev flakes on x86_64-linux.
@@ -177,7 +190,21 @@ name of the atom, such as `atom-shell`, which every message starts with.
   `files`, `types` and `excludes` in the check, and a domain with a hook that
   sets `always_run` passes the whole source instead.
 
-Checks that only one tool needs stay in its atom and are written as entries of
+- `prettier { lib, project }`: `{ names, unsupported }` for `config`, for the
+  atoms that own prettier. `names` are `.prettierrc`, `.prettierrc.json`,
+  `.prettierrc.json5`, `.prettierrc.yaml`, `.prettierrc.yml` and
+  `.prettierrc.toml`. `unsupported` holds the forms that prettier ignores with
+  `--config`: `.prettierrc` and `prettier.config` with the extension `js`,
+  `cjs`, `mjs`, `ts`, `cts` or `mts`; `package.json` when it has the key
+  `prettier`, labelled `the key prettier of package.json`; and
+  `.prettierrc.json` and `.prettierrc.toml` when a pattern of `files` or
+  `excludeFiles` of their `overrides` has a directory, which prettier resolves
+  against the directory of the chosen file, a store path, labelled
+  `<name> (overrides with a directory: <patterns>)`. The other forms of
+  `.prettierrc` are not read by Nix. An atom passes the result to `config` with
+  its `tool` and `default`.
+
+Checks that only one atom needs stay in that atom and are written as entries of
 `unsupported`: the tables of typos in `pyproject.toml` and `Cargo.toml` as
 `when` predicates that read the file with `builtins.fromTOML`, and `.ecrc` as a
 path of editorconfig-checker. Each tool gets its own errors, which only its file
@@ -247,6 +274,8 @@ atoms move to it.
 - `domain` MUST select files only by the `files` patterns of the given hooks, as
   pre-commit searches them, MUST read the list of files from the given source
   and MUST name its store path only after `name`.
+- `prettier` MUST give the configuration files of prettier for every atom that
+  owns prettier, and those atoms MUST pass it to `config`.
 - Checks that one atom needs MUST stay in that atom.
 - `internal/testing/` MUST NOT be part of the public API and MUST NOT be an
   output of the flake.

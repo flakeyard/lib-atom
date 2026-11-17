@@ -37,10 +37,10 @@ jobs:
         ["nix","shell","test-facts","test-facts-false","test-fixture",
         "test-follows","test-follows-message","test-follows-misnamed",
         "test-follows-unguarded","test-lib-config","test-lib-domain",
-        "test-lib-follows","test-lib-version","test-lib-warning",
-        "test-next-major","test-next-major-message","test-next-major-misnamed",
-        "test-workspace","test-workspace-formatter","test-workspace-tool",
-        "treefmt","workflows"]
+        "test-lib-follows","test-lib-prettier","test-lib-version",
+        "test-lib-warning","test-next-major","test-next-major-message",
+        "test-next-major-misnamed","test-workspace","test-workspace-formatter",
+        "test-workspace-tool","treefmt","workflows"]
       # The tests against the current upstream revisions (FY-0017, FY-0038).
       override-inputs: >-
         ${{ github.event_name == 'schedule'

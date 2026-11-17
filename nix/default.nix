@@ -9,4 +9,5 @@
   warning = import ./warning.nix;
   config = import ./config.nix;
   domain = import ./domain.nix;
+  prettier = import ./prettier.nix;
 }

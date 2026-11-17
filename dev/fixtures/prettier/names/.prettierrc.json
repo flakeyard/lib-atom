@@ -1,0 +1,5 @@
+{
+  "overrides": [
+    { "files": "CHANGELOG.md", "excludeFiles": ["*.txt"], "options": { "printWidth": 100 } }
+  ]
+}

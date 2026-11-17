@@ -1,9 +1,9 @@
 # lib-atom
 
 Nix functions that flakeyard atoms share: the check of `follows`, the warning of
-the next major version, the choice of configuration files and the files of a
-domain, with helpers for the tests of atoms ([FY-0040][fy-0040],
-[ADR-0001][adr-0001]). Projects do not use it directly.
+the next major version, the choice of configuration files, the configuration
+files of prettier and the files of a domain, with helpers for the tests of atoms
+([FY-0040][fy-0040], [ADR-0001][adr-0001]). Projects do not use it directly.
 
 ## How atoms take it
 
@@ -130,6 +130,33 @@ The functions of `lib`, each in [`nix/`](nix):
   pre-commit, and a domain with a hook that sets `always_run` passes the whole
   source instead.
 
+- `prettier { lib, project }`: `{ names, unsupported }` for `config`, for the
+  atoms that own prettier, atom-markdown and atom-data-formats, whose defaults
+  one file of the project replaces ([FY-0017][fy-0017]). `names` are
+  `.prettierrc`, `.prettierrc.json`, `.prettierrc.json5`, `.prettierrc.yaml`,
+  `.prettierrc.yml` and `.prettierrc.toml`. `unsupported` holds the forms that
+  prettier ignores with `--config`: `.prettierrc` and `prettier.config` with the
+  extension `js`, `cjs`, `mjs`, `ts`, `cts` or `mts`; `package.json` with the
+  key `prettier`, labelled `the key prettier of package.json`; and
+  `.prettierrc.json` and `.prettierrc.toml` whose `overrides` have a pattern of
+  `files` or `excludeFiles` with a directory, which prettier resolves against
+  the directory of the chosen file, labelled
+  `<name> (overrides with a directory: <patterns>)`. An atom passes both to
+  `config` with its `tool` and `default`:
+
+  ```nix
+  chosen (
+    {
+      tool = "prettier";
+      default = root + "/config/prettier.json";
+    }
+    // shared.prettier {
+      inherit lib;
+      project = self.outPath;
+    }
+  )
+  ```
+
 The functions read files only from the given source, with `builtins.pathExists`
 and `builtins.readDir`, which for a git flake holds only tracked files.
 
@@ -183,9 +210,11 @@ tests:
 - `workflows`, `nix`, `shell`, `treefmt`: the checks of the atoms of this
   repository;
 - `test-lib-version`, `test-lib-follows`, `test-lib-warning`, `test-lib-config`,
-  `test-lib-domain`: the functions of `lib`, with their messages and failures,
-  over the fixture projects in [`dev/fixtures/config`](dev/fixtures/config) and
-  [`dev/fixtures/domain`](dev/fixtures/domain);
+  `test-lib-domain`, `test-lib-prettier`: the functions of `lib`, with their
+  messages and failures, over the fixture projects in
+  [`dev/fixtures/config`](dev/fixtures/config),
+  [`dev/fixtures/domain`](dev/fixtures/domain) and
+  [`dev/fixtures/prettier`](dev/fixtures/prettier);
 - `test-facts`, `test-fixture`, `test-follows`, `test-next-major`,
   `test-workspace`: the helpers of `internal/testing` on
   [`dev/fixtures/atom`](dev/fixtures/atom), an atom that takes lib-atom as atoms
