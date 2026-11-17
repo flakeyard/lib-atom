@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0](https://github.com/flakeyard/lib-atom/compare/v0.1.0...v0.2.0) (2026-11-17)
+
+
+### Features
+
+* lib.domain with the files that the hooks of a domain match ([#9](https://github.com/flakeyard/lib-atom/issues/9)) ([353acf1](https://github.com/flakeyard/lib-atom/commit/353acf19063a92821028c623ba4cc25f38eb266b))
+
 ## 0.1.0 (2026-11-17)
 
 
