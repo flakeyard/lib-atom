@@ -280,25 +280,25 @@ takes lib-atom as atoms do, with every generator and `fixture`, and shows that
 each generated check fails, naming the false fact, for a false fact, for the
 atom under a wrong name, for the atom without the guard of `follows`, for a
 wrong expected message and for a formatter or tool the project does not get. It
-checks this repository with the released atom-workflows, atom-nix, atom-shell
-and atom-workspace.
+checks this repository with the released atom-data-formats, atom-markdown,
+atom-text, atom-workflows, atom-nix, atom-shell and atom-workspace.
 
 ### The released atoms
 
 `dev/nix/tests/released.nix` runs the tests of the released atoms with the
 working tree of lib-atom in place of the revision they pin, as FY-0040 requires
 of every pull request. The dev flake locks each released atom once, at its
-latest `v0` tag: the atoms that check this repository as flake inputs, the
-others as sources with `flake = false`, so that Renovate updates them as any
-input. For each, `checks.test-released-<atom>` builds every check of the atom's
-dev flake: its `outputs` are called with the inputs that `builtins.getFlake`
-gives for the atom's `dev/flake.lock` and with `self`, and its `dev/flake.nix`
-is imported with `builtins.scopedImport` and a `fetchTree` that gives the root
-of this repository for the node of lib-atom and throws for any other source. The
-atoms themselves do not change. The check also fails, naming the fact, when the
-atom no longer pins lib-atom in its root `flake.lock` or its loader no longer
-calls `builtins.fetchTree`, either of which would leave the pinned revision in
-place unnoticed. A newly released atom is added to the list and as an input.
+latest `v0` tag, as the same input that checks this repository, so that the
+atoms under test and the atoms that lint are one pin that Renovate updates. For
+each, `checks.test-released-<atom>` builds every check of the atom's dev flake:
+its `outputs` are called with the inputs that `builtins.getFlake` gives for the
+atom's `dev/flake.lock` and with `self`, and its `dev/flake.nix` is imported
+with `builtins.scopedImport` and a `fetchTree` that gives the root of this
+repository for the node of lib-atom and throws for any other source. The atoms
+themselves do not change. The check also fails, naming the fact, when the atom
+no longer pins lib-atom in its root `flake.lock` or its loader no longer calls
+`builtins.fetchTree`, either of which would leave the pinned revision in place
+unnoticed. A newly released atom is added to the list and as an input.
 
 ## Constraints
 

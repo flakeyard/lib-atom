@@ -15,6 +15,20 @@
       url = "git+https://github.com/cachix/git-hooks.nix?ref=master&rev=204b6977e00caac19e2313015a598543ca7be150&shallow=1";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    atom-data-formats = {
+      url = "git+https://github.com/flakeyard/atom-data-formats?ref=v0&rev=0c643933ae631061f9fb6f1f26cf556db689f011&shallow=1";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+      inputs.git-hooks.follows = "git-hooks";
+    };
+    atom-markdown = {
+      url = "git+https://github.com/flakeyard/atom-markdown?ref=v0&rev=0d3bca6f2fee47de01ecbe2ce1e49c0219870988&shallow=1";
+      inputs.treefmt-nix.follows = "treefmt-nix";
+      inputs.git-hooks.follows = "git-hooks";
+    };
+    atom-text = {
+      url = "git+https://github.com/flakeyard/atom-text?ref=v0&rev=5d3eff102fc73979c01625325f07c13d2ea1a6c6&shallow=1";
+      inputs.git-hooks.follows = "git-hooks";
+    };
     atom-workflows = {
       url = "git+https://github.com/flakeyard/atom-workflows?ref=v0&rev=35e4a0994f92cc6c47b018fcf062aca59598c493&shallow=1";
       inputs.git-hooks.follows = "git-hooks";
@@ -30,20 +44,6 @@
       inputs.git-hooks.follows = "git-hooks";
     };
     atom-workspace.url = "git+https://github.com/flakeyard/atom-workspace?ref=v0&rev=09ea8faaf078e30d9c918745ac40ce69a7b82946&shallow=1";
-    # The released atoms that only the check of FY-0040 runs: their sources,
-    # whose dev flakes dev/nix/tests/released.nix evaluates.
-    atom-markdown = {
-      url = "git+https://github.com/flakeyard/atom-markdown?ref=v0&rev=0d3bca6f2fee47de01ecbe2ce1e49c0219870988&shallow=1";
-      flake = false;
-    };
-    atom-text = {
-      url = "git+https://github.com/flakeyard/atom-text?ref=v0&rev=5d3eff102fc73979c01625325f07c13d2ea1a6c6&shallow=1";
-      flake = false;
-    };
-    atom-data-formats = {
-      url = "git+https://github.com/flakeyard/atom-data-formats?ref=v0&rev=0c643933ae631061f9fb6f1f26cf556db689f011&shallow=1";
-      flake = false;
-    };
     import-tree.url = "git+https://github.com/vic/import-tree?ref=main&rev=eb1b52eaecc57f7c136d07ae8a93e724dfecac46&shallow=1";
   };
 
@@ -98,6 +98,9 @@
       {
         inherit systems;
         imports = [
+          inputs.atom-data-formats.flakeModules.default
+          inputs.atom-markdown.flakeModules.default
+          inputs.atom-text.flakeModules.default
           inputs.atom-workflows.flakeModules.default
           inputs.atom-nix.flakeModules.default
           inputs.atom-shell.flakeModules.default
