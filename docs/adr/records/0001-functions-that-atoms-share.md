@@ -112,6 +112,32 @@ that the dev flake locks showed:
   its app evaluate to the same derivations as before; only the checks of the
   changed files of the atoms themselves differ.
 
+With the seven atoms released on lib-atom (atom-workflows, atom-workspace,
+atom-nix, atom-shell, atom-markdown, atom-text and atom-data-formats, at their
+latest `v0` tags), Nix 2.35.2 showed:
+
+- The loader in each atom's `dev/flake.nix` is the same three lines: it reads
+  the atom's root `flake.lock` and calls `builtins.fetchTree` with the `locked`
+  attributes of its node of lib-atom. It takes no argument that could replace
+  that revision, and no other `builtins.fetchTree` is called in the file.
+- `builtins.scopedImport` is available in pure evaluation, also in
+  `nix flake check`. A dev flake imported with it and a `builtins` whose
+  `fetchTree` gives another source for the node of lib-atom runs with that
+  source; the files it imports in turn see the usual `builtins`, and `../.` in
+  it still names the root of the atom's source.
+- `builtins.getFlake` of `git+https://github.com/flakeyard/<atom>?dir=dev` with
+  `rev` evaluates in pure evaluation and gives `inputs` as the atom's
+  `dev/flake.lock` locks them, without evaluating the outputs; a `path:` of a
+  store path is refused.
+- Every check of the seven dev flakes, evaluated this way with the working tree
+  of lib-atom at `main`, builds on x86_64-linux and evaluates on every system.
+  With the message of `follows` changed in the working tree, the checks of
+  atom-shell and atom-markdown fail in their `test-follows`, which restates the
+  message; atom-workspace, which has no upstream inputs, still passes.
+- `action-flake-lock` accepts nested entries of lib-atom locked more than once
+  from `v0.4.0`, which workflow-check pins from `v0.6.0`. The dev flake's atoms
+  at their latest tags pin two revisions of lib-atom.
+
 ## Decision
 
 ### Flake
@@ -254,10 +280,25 @@ takes lib-atom as atoms do, with every generator and `fixture`, and shows that
 each generated check fails, naming the false fact, for a false fact, for the
 atom under a wrong name, for the atom without the guard of `follows`, for a
 wrong expected message and for a formatter or tool the project does not get. It
-checks this repository with the released atom-workflows, atom-nix, atom-shell
-and atom-workspace. The check of FY-0040 that runs the released atoms with the
-working tree of lib-atom needs atoms that take lib-atom; it is added when the
-atoms move to it.
+checks this repository with the released atom-data-formats, atom-markdown,
+atom-text, atom-workflows, atom-nix, atom-shell and atom-workspace.
+
+### The released atoms
+
+`dev/nix/tests/released.nix` runs the tests of the released atoms with the
+working tree of lib-atom in place of the revision they pin, as FY-0040 requires
+of every pull request. The dev flake locks each released atom once, at its
+latest `v0` tag, as the same input that checks this repository, so that the
+atoms under test and the atoms that lint are one pin that Renovate updates. For
+each, `checks.test-released-<atom>` builds every check of the atom's dev flake:
+its `outputs` are called with the inputs that `builtins.getFlake` gives for the
+atom's `dev/flake.lock` and with `self`, and its `dev/flake.nix` is imported
+with `builtins.scopedImport` and a `fetchTree` that gives the root of this
+repository for the node of lib-atom and throws for any other source. The atoms
+themselves do not change. The check also fails, naming the fact, when the atom
+no longer pins lib-atom in its root `flake.lock` or its loader no longer calls
+`builtins.fetchTree`, either of which would leave the pinned revision in place
+unnoticed. A newly released atom is added to the list and as an input.
 
 ## Constraints
 
@@ -281,6 +322,9 @@ atoms move to it.
   output of the flake.
 - Every function and helper MUST be checked by `dev/flake.nix` with pass and
   failure cases.
+- Every pull request MUST build every check of the dev flake of every released
+  atom with the working tree of lib-atom in place of the revision the atom pins,
+  and that check MUST fail when it cannot replace the revision.
 
 ## Consequences
 
@@ -297,6 +341,11 @@ atoms move to it.
   being that module.
 - (±) The helpers of the tests change with any release; an atom takes them with
   the revision it pins.
+- (+) A change of lib-atom that breaks a released atom fails its pull request,
+  before any atom takes it.
+- (−) The check depends on the form of the atoms' loader and on
+  `builtins.scopedImport`, which the Nix manual does not document; a change of
+  either fails the check rather than passing it.
 
 ## Alternatives considered
 
@@ -316,6 +365,15 @@ atoms move to it.
 - **Test helpers as flake output.** FY-0040 keeps them out of the public API.
 - **Generators that give whole modules.** The module system recurses infinitely
   when a module comes from a module argument.
+- **An argument of the atoms' loader for another source of lib-atom**, such as
+  `inputs.lib-atom-source or (builtins.fetchTree ...)`. Explicit, but every atom
+  would have to change and be released before lib-atom could check it, and the
+  loader of FY-0040 would do more than load.
+- **The atoms' dev flakes as inputs of this flake with `dir=dev`.** Their inputs
+  would be locked again in `dev/flake.lock`, once per atom, and the loader would
+  still fetch the pinned lib-atom.
+- **Only the `test-` checks of the atoms.** Their checks of their own repository
+  also run the atom's module with lib-atom.
 
 [fy-0017]:
   https://github.com/flakeyard/decisions/blob/main/docs/adr/records/0017-atom-contract.md

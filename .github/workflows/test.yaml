@@ -40,9 +40,12 @@ jobs:
         "test-follows-unguarded","test-lib-config","test-lib-domain",
         "test-lib-follows","test-lib-prettier","test-lib-version",
         "test-lib-warning","test-next-major","test-next-major-message",
-        "test-next-major-misnamed","test-workspace",
-        "test-workspace-formatter","test-workspace-tool","text",
-        "treefmt","workflows"]
+        "test-next-major-misnamed","test-released-atom-data-formats",
+        "test-released-atom-markdown","test-released-atom-nix",
+        "test-released-atom-shell","test-released-atom-text",
+        "test-released-atom-workflows","test-released-atom-workspace",
+        "test-workspace","test-workspace-formatter","test-workspace-tool",
+        "text","treefmt","workflows"]
       # Weekly, the apps that need the network: the links of the Markdown files
       # and the online audits of the workflows.
       apps: ${{ github.event_name == 'schedule' && '["markdown-links","workflows-online"]' || '[]' }}
