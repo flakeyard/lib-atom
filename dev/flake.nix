@@ -110,6 +110,10 @@
         ];
         _module.args = {
           inherit root testingFor;
+          # The repository as a flake gives a project its source: a store path
+          # as a string with context, already in the store that evaluates this
+          # flake.
+          repository = inputs.self.sourceInfo.outPath;
           testing = testingFor { };
           lib-atom = library.lib;
         };

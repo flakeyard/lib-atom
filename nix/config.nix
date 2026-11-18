@@ -56,12 +56,14 @@ let
   # A store path of its own, named after the file without a leading dot:
   # prettier chooses the parser by the extension of the file name, which for
   # .prettierrc in a store path such as /nix/store/<hash>-.prettierrc would be
-  # ".prettierrc".
+  # ".prettierrc". The name comes from name, never from path: a project given
+  # as self.outPath is a string with the context of the source, which a name
+  # of a store path must not carry.
   stored =
-    path:
+    path: name:
     builtins.path {
       inherit path;
-      name = lib.removePrefix "." (baseNameOf path);
+      name = lib.removePrefix "." (baseNameOf name);
     };
 in
 {
@@ -70,7 +72,7 @@ in
     if errors != [ ] then
       throw (lib.concatStringsSep "\n" errors)
     else if found == [ ] then
-      stored default
+      stored default (baseNameOf default)
     else
-      stored (project + "/${lib.head found}");
+      stored (project + "/${lib.head found}") (lib.head found);
 }
