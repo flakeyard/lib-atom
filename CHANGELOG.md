@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/flakeyard/lib-atom/compare/v0.3.0...v0.3.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* name configuration files without the context of the project ([#26](https://github.com/flakeyard/lib-atom/issues/26)) ([eadd640](https://github.com/flakeyard/lib-atom/commit/eadd64092aaf0a15f5e7e2da23db59a88e1c290f))
+
 ## [0.3.0](https://github.com/flakeyard/lib-atom/compare/v0.2.0...v0.3.0) (2026-11-17)
 
 
