@@ -26,24 +26,24 @@
       inputs.git-hooks.follows = "git-hooks";
     };
     atom-text = {
-      url = "git+https://github.com/flakeyard/atom-text?ref=v0&rev=5d3eff102fc73979c01625325f07c13d2ea1a6c6&shallow=1";
+      url = "git+https://github.com/flakeyard/atom-text?ref=v0&rev=64bd85b85d3fc823cf43c71baa9279caeda8a92c&shallow=1";
       inputs.git-hooks.follows = "git-hooks";
     };
     atom-workflows = {
-      url = "git+https://github.com/flakeyard/atom-workflows?ref=v0&rev=35e4a0994f92cc6c47b018fcf062aca59598c493&shallow=1";
+      url = "git+https://github.com/flakeyard/atom-workflows?ref=v0&rev=476bd0c2c31ffc313f006f551c8fac37ce7840ff&shallow=1";
       inputs.git-hooks.follows = "git-hooks";
     };
     atom-nix = {
-      url = "git+https://github.com/flakeyard/atom-nix?ref=v0&rev=1ed903c4516d57313ab09415d3990834dbfd4495&shallow=1";
+      url = "git+https://github.com/flakeyard/atom-nix?ref=v0&rev=285ea1c7acb0841c0d253b998ee8a54217baef39&shallow=1";
       inputs.treefmt-nix.follows = "treefmt-nix";
       inputs.git-hooks.follows = "git-hooks";
     };
     atom-shell = {
-      url = "git+https://github.com/flakeyard/atom-shell?ref=v0&rev=1ccc313cdbc71333cd8117c72996dc40eecd2889&shallow=1";
+      url = "git+https://github.com/flakeyard/atom-shell?ref=v0&rev=9cc395d50024ee12c6b71ae6df77ea8b4a2aba66&shallow=1";
       inputs.treefmt-nix.follows = "treefmt-nix";
       inputs.git-hooks.follows = "git-hooks";
     };
-    atom-workspace.url = "git+https://github.com/flakeyard/atom-workspace?ref=v0&rev=09ea8faaf078e30d9c918745ac40ce69a7b82946&shallow=1";
+    atom-workspace.url = "git+https://github.com/flakeyard/atom-workspace?ref=v0&rev=df1b7e30233e3bb0f489834f84070a25b0b0807f&shallow=1";
     import-tree.url = "git+https://github.com/vic/import-tree?ref=main&rev=eb1b52eaecc57f7c136d07ae8a93e724dfecac46&shallow=1";
   };
 
