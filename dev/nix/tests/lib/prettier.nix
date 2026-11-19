@@ -7,6 +7,7 @@
 # The projects are in dev/fixtures/prettier.
 {
   lib-atom,
+  repository,
   root,
   testing,
   ...
@@ -17,11 +18,8 @@
     let
       inherit (pkgs) lib;
       fixtures = root + "/dev/fixtures/prettier";
-      chosen =
-        name:
-        let
-          project = fixtures + "/${name}";
-        in
+      chosenIn =
+        project:
         lib-atom.config
           {
             inherit lib project;
@@ -34,6 +32,16 @@
             }
             // lib-atom.prettier { inherit lib project; }
           );
+      chosen = name: chosenIn (fixtures + "/${name}");
+      # The project as a flake gives it, self.outPath: a store path as a
+      # string with context.
+      source = name: chosenIn "${repository}/dev/fixtures/prettier/${name}";
+      stored =
+        name:
+        "${builtins.path {
+          path = fixtures + "/one/.prettierrc.yaml";
+          inherit name;
+        }}";
       errors = name: (chosen name).errors;
       # Restated: the text is the interface (FY-0035).
       names = ".prettierrc, .prettierrc.json, .prettierrc.json5, .prettierrc.yaml, .prettierrc.yml, .prettierrc.toml";
@@ -44,11 +52,11 @@
     {
       checks.test-lib-prettier = testing.facts pkgs "test-lib-prettier" {
         "without a file, no errors" = errors "none" == [ ];
-        "a file at a standard name is chosen" =
-          "${(chosen "one").file}" == "${builtins.path {
-            path = fixtures + "/one/.prettierrc.yaml";
-            name = "prettierrc.yaml";
-          }}";
+        "a file at a standard name is chosen" = "${(chosen "one").file}" == stored "prettierrc.yaml";
+        "a file of a project given as a string with context is chosen" =
+          "${(source "one").file}" == stored "prettierrc.yaml";
+        "the errors of a project given as a string with context" =
+          (source "directories").errors == errors "directories";
         "JavaScript and TypeScript configurations fail" =
           errors "js" == [ (refused ".prettierrc.cjs, prettier.config.ts") ];
         "the key prettier of package.json fails" =

@@ -5,6 +5,7 @@
 # (FY-0037). The projects are in dev/fixtures/config.
 {
   lib-atom,
+  repository,
   root,
   testing,
   ...
@@ -15,13 +16,12 @@
     let
       inherit (pkgs) lib;
       fixtures = root + "/dev/fixtures/config";
-      chosen =
-        name: arguments:
+      chosenIn =
+        project: arguments:
         lib-atom.config
           {
-            inherit lib;
+            inherit lib project;
             atom = "atom-example";
-            project = fixtures + "/${name}";
           }
           (
             {
@@ -34,6 +34,10 @@
             }
             // arguments
           );
+      chosen = name: chosenIn (fixtures + "/${name}");
+      # The project as a flake gives it, self.outPath: a store path as a
+      # string with context, which a name of a store path must not carry.
+      source = name: "${repository}/dev/fixtures/config/${name}";
       file = name: arguments: (chosen name arguments).file;
       errors = name: arguments: (chosen name arguments).errors;
       # The store path of a file under a name, as text: comparing paths needs
@@ -64,6 +68,10 @@
         "without a file, no errors" = errors "none" { } == [ ];
         "the project's file, without the leading dot" =
           "${file "one" { }}" == stored (fixtures + "/one/.tool.json") "tool.json";
+        "the file of a project given as a string with context" =
+          "${(chosenIn (source "one") { }).file}" == stored (fixtures + "/one/.tool.json") "tool.json";
+        "the default of a project given as a string with context" =
+          "${(chosenIn (source "none") { }).file}" == stored (fixtures + "/default.json") "default.json";
         "a file below the root, under its base name" =
           "${file "nested" { names = [ ".github/tool.yaml" ]; }}"
           == stored (fixtures + "/nested/.github/tool.yaml") "tool.yaml";

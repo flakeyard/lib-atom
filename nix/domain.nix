@@ -21,11 +21,24 @@ let
   # pre-commit searches the pattern in the relative path; a hook without
   # `files` matches every file, as in pre-commit.
   matches = hook: path: builtins.match ".*(${hook.files or ""}).*" path != null;
+  # The paths below directory, relative to the root, joined from the names
+  # that readDir gives: a project given as self.outPath is a string with the
+  # context of the source, which paths made from it would carry into every
+  # derivation that names them.
+  below =
+    directory:
+    lib.concatLists (
+      lib.mapAttrsToList (
+        name: type:
+        let
+          path = directory + name;
+        in
+        if type == "directory" then below "${path}/" else [ path ]
+      ) (builtins.readDir (project + "/${directory}"))
+    );
   # Read from the project's source, never from a store path made during
   # evaluation, which a store may not have.
-  files = lib.filter (path: lib.any (hook: matches hook path) hooks) (
-    map relative (lib.filesystem.listFilesRecursive project)
-  );
+  files = lib.filter (path: lib.any (hook: matches hook path) hooks) (below "");
 in
 {
   inherit files;

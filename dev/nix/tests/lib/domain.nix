@@ -5,6 +5,7 @@
 # that src of one has for the hook of .nix files.
 {
   lib-atom,
+  repository,
   root,
   testing,
   ...
@@ -19,17 +20,21 @@
       nix = hook ''\.nix$'';
       workflows = hook ''^\.github/workflows/'';
       markdown = hook ''\.md$'';
-      domain =
+      domainIn =
         project: hooks:
         lib-atom.domain
           {
-            inherit lib;
-            project = fixtures + "/${project}";
+            inherit lib project;
           }
           {
             name = "example";
             inherit hooks;
           };
+      domain = project: domainIn (fixtures + "/${project}");
+      # The project as a flake gives it, self.outPath: a store path as a
+      # string with context, which the relative paths must not carry: a
+      # derivation that names them would depend on the whole project.
+      source = project: domainIn "${repository}/dev/fixtures/domain/${project}";
       files = project: hooks: (domain project hooks).files;
       # Store paths as text: comparing them needs no build and reads nothing
       # from the store, which a store other than /nix/store would not allow.
@@ -78,6 +83,15 @@
         "no hooks give no files" = files "one" [ ] == [ ];
         "a hook without files matches every file" =
           same (files "one" [ { } ]) every && same (files "one" [ (hook "") ]) every;
+        "the files of a project given as a string with context, without it" =
+          let
+            given = (source "one" [ nix ]).files;
+          in
+          same given sources && !lib.any builtins.hasContext given;
+        "of a project given as a string with context, without it" =
+          !lib.any builtins.hasContext ((source "one" [ nix ]).of nix);
+        "src of a project given as a string with context is the same" =
+          "${(source "one" [ nix ]).src}" == src "one" [ nix ];
         "src is named after the domain" = lib.hasSuffix "-example" (src "one" [ nix ]);
         "a change of other files keeps src" = src "one" [ nix ] == src "changed" [ nix ];
         "a change of the files changes src" = src "one" [ markdown ] != src "changed" [ markdown ];
